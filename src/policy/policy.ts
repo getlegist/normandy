@@ -31,11 +31,11 @@ export class Policy {
 	categories: Category[]
 
 	@Field()
-	@Column()
+	@Column({ default: '' })
 	title: string
 
 	@Field()
-	@Column()
+	@Column({ default: '' })
 	description: string
 
 	@Field(() => [NamedEntity])
