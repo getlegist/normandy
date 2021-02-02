@@ -28,7 +28,7 @@ export const getCollection = async <T>(
 	}
 }
 
-export interface IBaseEntityService<Entity> {
+export interface IBaseEntityService<Entity, InputType> {
 	find(id: string, options?: FindOneOptions): Promise<Entity>
 	findMany(options?: FindManyOptions): Promise<Entity[]>
 	findByIDs(ids: string[], options?: FindManyOptions): Promise<Entity[]>
@@ -37,19 +37,14 @@ export interface IBaseEntityService<Entity> {
 	removeMany(ids: string[], options?: RemoveOptions): Promise<Entity[]>
 
 	createEmpty(): Promise<Entity>
-	create(
-		input: Record<string, string | number | EntityOrStrings<Entity>>
-	): Promise<Entity>
+	create(input: InputType): Promise<Entity>
 
-	update(
-		id: string,
-		input: Record<string, string | number | EntityOrStrings<Entity>>
-	): Promise<Entity>
+	update(id: string, input: Partial<InputType>): Promise<Entity>
 }
 
 export const BaseEntityService = <Entity>(entityRef: Entity): any => {
 	abstract class BaseEntityServiceHost
-		implements Partial<IBaseEntityService<Entity>> {
+		implements Partial<IBaseEntityService<Entity, any>> {
 		constructor(private repository: Repository<Entity>) {}
 
 		find(id: string, options?: FindOneOptions<Entity>): Promise<Entity> {
@@ -82,46 +77,34 @@ export const BaseEntityService = <Entity>(entityRef: Entity): any => {
 			await Promise.allSettled(entities.map((z) => this.repository.remove(z)))
 			return entities
 		}
-
-		// async create(input: InputType): Promise<Entity> {
-		// 	const entity = this.repository.create()
-		//
-		// 	const newObj = Object.entries(input).map(async ([key, _value]) => {
-		// 		const value = Array.isArray(_value)
-		// 			? await getCollection(
-		// 					_value as EntityOrStrings<Entity>,
-		// 					this.repository
-		// 			  )
-		// 			: _value
-		//
-		// 		return [key as string, value]
-		// 	})
-		//
-		// 	console.log(newObj)
-		//
-		// 	console.log(
-		// 		Object.fromEntries(
-		// 			(newObj as unknown) as [string, Entity[] | string | number][]
-		// 		)
-		// 	)
-		//
-		// 	Object.assign(
-		// 		entity,
-		// 		Object.fromEntries(
-		// 			(newObj as unknown) as [string, Entity[] | string | number][]
-		// 		)
-		// 	)
-		//
-		// 	return this.repository.save(entity)
-		// }
-		//
-		// update(id: string, input: InputType): Promise<Entity> {}
 	}
 
 	return BaseEntityServiceHost
 }
 
-// TODO: Flesh out queries + mutation skeletons
-// export interface BaseEntityResolver<Entity> {
-// 	service: BaseEntityService<Entity>
-// }
+export const assignCollectionsToEntity = async <T, Entity>(
+	arr: Array<[string, EntityOrStrings<any>, Repository<any>]>,
+	entity: Entity
+) => {
+	const addProperty = async (
+		propertyName: string,
+
+		repository: Repository<T>,
+		input?: EntityOrStrings<T>
+	) => {
+		if (input === undefined) entity[propertyName] = []
+		else {
+			entity[propertyName] = await getCollection(input, repository).catch(
+				(err) => {
+					throw err
+				}
+			)
+		}
+	}
+
+	return Promise.all(
+		arr.map(([propertyName, input, repository]) =>
+			addProperty(propertyName, repository, input)
+		)
+	)
+}
