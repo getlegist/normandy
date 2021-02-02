@@ -12,7 +12,12 @@ import { CreatePolicyInput } from './inputs/CreatePolicy.input'
 import { Category } from '../../category/category'
 import { LegislationEvent } from '../../events/legislation/legislation-event'
 import { NamedEntity } from '../../entities/named-entity'
-import { BaseEntityService, getCollection } from '../../shared/database'
+import {
+	assignCollectionsToEntity,
+	BaseEntityService,
+	getCollection,
+	IBaseEntityService,
+} from '../../shared/database'
 
 @Injectable()
 export class PolicyService extends BaseEntityService(Policy) {
@@ -28,37 +33,15 @@ export class PolicyService extends BaseEntityService(Policy) {
 		super(policyRepository)
 	}
 
-	// public findAll(options?: FindManyOptions<Policy>) {}
-	//
-	// public findOne(id: string, options?: FindOneOptions<Policy>) {}
-	//
-	// public async remove(id: string): Promise<Policy>
-	// public async remove(id: string[]): Promise<Policy[]>
-	// public async remove(id: string | string[]) {
-	// 	const ids = Array.isArray(id) ? id : [id]
-	//
-	// 	const policies = await this.policyRepository.findByIds(ids)
-	//
-	// 	if (policies.length === 0) {
-	// 		throw new Error(`Could not find Policies with IDs of ${ids.toString()}`)
-	// 	}
-	//
-	// 	await this.policyRepository.remove(policies)
-	//
-	// 	if (policies.length === 1) return policies[0]
-	//
-	// 	return policies
-	// }
-
-	// public async createEmpty(options?: SaveOptions): Promise<Policy> {
-	// 	const policy = new Policy()
-	// 	policy.categories = []
-	// 	policy.legislationEvents = []
-	// 	policy.entities = []
-	// 	policy.title = ''
-	// 	policy.description = ''
-	// 	return this.policyRepository.save(policy, options)
-	// }
+	public async createEmpty(options?: SaveOptions): Promise<Policy> {
+		const policy = new Policy()
+		policy.categories = []
+		policy.legislationEvents = []
+		policy.entities = []
+		policy.title = ''
+		policy.description = ''
+		return this.policyRepository.save(policy, options)
+	}
 
 	public async create(
 		{
@@ -70,28 +53,13 @@ export class PolicyService extends BaseEntityService(Policy) {
 		}: CreatePolicyInput,
 		saveOptions?: SaveOptions
 	): Promise<Policy> {
-		const policy = new Policy()
+		const entity = new Policy()
 
-		policy.title = title
-		policy.description = title
+		entity.title = title
+		entity.description = title
 
-		const addProperty = async <T>(
-			propertyName: string,
-			input: T[] | string[] | undefined,
-			repository: Repository<T>
-		) => {
-			if (input === undefined) policy[propertyName] = []
-			else {
-				policy[propertyName] = await getCollection(input, repository).catch(
-					(err) => {
-						throw err
-					}
-				)
-			}
-		}
-
-		await Promise.allSettled(
-			([
+		await assignCollectionsToEntity(
+			[
 				[
 					'legislationEvents',
 					legislationEvents,
@@ -99,13 +67,12 @@ export class PolicyService extends BaseEntityService(Policy) {
 				],
 				['entities', namedEntities, this.namedEntityRepository],
 				['categories', categories, this.categoryRepository],
-			] as any).map(([propertyName, input, repository]) =>
-				addProperty(propertyName, input, repository)
-			)
+			],
+			entity
 		)
 
-		await this.policyRepository.save(policy, saveOptions)
+		await this.policyRepository.save(entity, saveOptions)
 
-		return policy
+		return entity
 	}
 }
