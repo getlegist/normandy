@@ -9,7 +9,7 @@ export const BaseEntityResolver = <Entity extends Type<unknown>>(
 ): any => {
 	@Resolver({ isAbstract: true })
 	abstract class AbstractBase {
-		constructor(private service: IBaseEntityService<Entity>) {}
+		constructor(private service: IBaseEntityService<Entity, any>) {}
 
 		@Query(() => [associatedEntityReference], {
 			name: `find${plural(associatedEntityReference.name)}`,
@@ -36,13 +36,6 @@ export const BaseEntityResolver = <Entity extends Type<unknown>>(
 			@Args('ids', { type: () => [String] }) ids: string[]
 		): Promise<Entity[]> {
 			return this.service.findByIDs(ids)
-		}
-
-		@Mutation(() => associatedEntityReference, {
-			name: `createEmpty${associatedEntityReference.name}`,
-		})
-		async createEmpty() {
-			return this.service.createEmpty()
 		}
 
 		@Mutation(() => associatedEntityReference, {
