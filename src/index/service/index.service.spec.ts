@@ -29,7 +29,7 @@ describe('IndexService', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([Index]),
+				TypeOrmModule.forFeature([Index, LegislationEvent, NamedEntity]),
 			],
 		}).compile()
 

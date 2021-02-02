@@ -29,7 +29,13 @@ describe('NamedEntityService', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([NamedEntity]),
+				TypeOrmModule.forFeature([
+					NamedEntity,
+					Category,
+					LegislationEvent,
+					Policy,
+					Index,
+				]),
 			],
 		}).compile()
 

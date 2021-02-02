@@ -30,7 +30,7 @@ describe('LegislationEventResolver', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([LegislationEvent]),
+				TypeOrmModule.forFeature([LegislationEvent, NamedEntity, Index]),
 			],
 		}).compile()
 

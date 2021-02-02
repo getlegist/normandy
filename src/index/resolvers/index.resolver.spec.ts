@@ -30,7 +30,7 @@ describe('IndexResolver', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([Index]),
+				TypeOrmModule.forFeature([Index, NamedEntity, LegislationEvent]),
 			],
 		}).compile()
 

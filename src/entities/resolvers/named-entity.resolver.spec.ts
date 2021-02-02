@@ -29,7 +29,13 @@ describe('NamedEntityResolver', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([NamedEntity]),
+				TypeOrmModule.forFeature([
+					NamedEntity,
+					Category,
+					LegislationEvent,
+					Policy,
+					Index,
+				]),
 			],
 			providers: [NamedEntityResolver, NamedEntityService],
 		}).compile()
