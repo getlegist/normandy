@@ -30,7 +30,12 @@ describe('CategoryResolver', () => {
 						Category,
 					],
 				}),
-				TypeOrmModule.forFeature([Category]),
+				TypeOrmModule.forFeature([
+					Category,
+					LegislationEvent,
+					Policy,
+					NamedEntity,
+				]),
 			],
 		}).compile()
 
