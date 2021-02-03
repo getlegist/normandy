@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common'
 import {
 	assignCollectionsToEntity,
 	BaseEntityService,
+	completeMergeEntity,
+	completeUpdateEntity,
 	getCollection,
 } from '../../../shared/database'
 import { LegislationEvent } from '../legislation-event'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { Repository, SaveOptions } from 'typeorm'
 import { CreateLegislationEventInput } from './inputs/CreateLegislationEvent.input'
+import { CreatePolicyInput } from '../../../policy/service/inputs/CreatePolicy.input'
+import { Policy } from '../../../policy/policy'
 
 @Injectable()
 export class LegislationEventService extends BaseEntityService(
@@ -64,5 +68,43 @@ export class LegislationEventService extends BaseEntityService(
 		await this.eventRepository.save(entity)
 
 		return entity
+	}
+
+	public async updateLegislationEvent(
+		id: string,
+		input: Partial<CreateLegislationEventInput>,
+		saveOptions?: SaveOptions
+	): Promise<LegislationEvent> {
+		return completeUpdateEntity(
+			this.eventRepository,
+			id,
+			input,
+			['original', 'text', 'description'],
+			[
+				['entities', input.entities, this.namedEntityRepository],
+				['policies', input.policies, this.policyRepository],
+				['indices', input.indices, this.indexRepository],
+				['categories', input.categories, this.categoryRepository],
+			]
+		)
+	}
+
+	public async updateMergeLegislationEvent(
+		id: string,
+		input: Partial<CreateLegislationEventInput>,
+		saveOptions?: SaveOptions
+	): Promise<LegislationEvent> {
+		return completeMergeEntity(
+			this.eventRepository,
+			id,
+			input,
+			['original', 'text', 'description'],
+			[
+				['entities', input.entities, this.namedEntityRepository],
+				['policies', input.policies, this.policyRepository],
+				['indices', input.indices, this.indexRepository],
+				['categories', input.categories, this.categoryRepository],
+			]
+		)
 	}
 }
