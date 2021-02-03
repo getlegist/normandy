@@ -12,7 +12,7 @@ export const BaseEntityResolver = <Entity extends Type<unknown>>(
 		constructor(private service: IBaseEntityService<Entity, any>) {}
 
 		@Query(() => [associatedEntityReference], {
-			name: `find${plural(associatedEntityReference.name)}`,
+			name: plural(associatedEntityReference.name).toLowerCase(),
 		})
 		async findMany(
 			@Args('options', { nullable: true }) options: PaginationInput
@@ -23,14 +23,14 @@ export const BaseEntityResolver = <Entity extends Type<unknown>>(
 		}
 
 		@Query(() => [associatedEntityReference], {
-			name: `find${associatedEntityReference.name}`,
+			name: associatedEntityReference.name.toLowerCase(),
 		})
 		async find(@Args('id') id: string): Promise<Entity> {
 			return this.service.find(id)
 		}
 
 		@Query(() => [associatedEntityReference], {
-			name: `find${associatedEntityReference.name}ByIDs`,
+			name: `bulk${plural(associatedEntityReference.name)}`,
 		})
 		async findByIDs(
 			@Args('ids', { type: () => [String] }) ids: string[]

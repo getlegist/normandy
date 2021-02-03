@@ -83,11 +83,11 @@ export const BaseEntityService = <Entity>(entityRef: Entity): any => {
 	return BaseEntityServiceHost
 }
 
-export const assignCollectionsToEntity = async <T, Entity>(
+export const assignCollectionsToEntity = async <Entity>(
 	arr: Array<[string, EntityOrStrings<any>, Repository<any>]>,
 	entity: Entity
 ) => {
-	const addProperty = async (
+	const addProperty = async <T>(
 		propertyName: string,
 		repository: Repository<T>,
 		input?: EntityOrStrings<T>
