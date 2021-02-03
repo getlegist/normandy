@@ -1,12 +1,13 @@
 import { Field, InputType } from '@nestjs/graphql'
 
 @InputType()
-export class CreateNamedEntityInput {
-	@Field()
+export class UpdateNamedEntityInput {
+	@Field({ nullable: true })
 	title: string
-	@Field()
+	@Field({ nullable: true })
 	description: string
-	@Field()
+
+	@Field({ nullable: true })
 	type: string
 	@Field(() => [String], { nullable: true })
 	indices?: string[]
