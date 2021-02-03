@@ -3,6 +3,7 @@ import {
 	FindOneOptions,
 	RemoveOptions,
 	Repository,
+	SaveOptions,
 } from 'typeorm'
 import { EntityOrStrings } from '../types'
 
@@ -88,7 +89,6 @@ export const assignCollectionsToEntity = async <T, Entity>(
 ) => {
 	const addProperty = async (
 		propertyName: string,
-
 		repository: Repository<T>,
 		input?: EntityOrStrings<T>
 	) => {
@@ -107,4 +107,109 @@ export const assignCollectionsToEntity = async <T, Entity>(
 			addProperty(propertyName, repository, input)
 		)
 	)
+}
+
+export const mergeCollectionsWithEntity = async <T, Entity>(
+	arr: Array<[string, EntityOrStrings<any>, Repository<any>]>,
+	entity: Entity
+) => {
+	const addProperty = async (
+		propertyName: string,
+		repository: Repository<T>,
+		input?: EntityOrStrings<T>
+	) => {
+		if (input === undefined) entity[propertyName] = []
+		else {
+			entity[propertyName] = [
+				...new Set(
+					entity[propertyName].concat(
+						await getCollection(input, repository).catch((err) => {
+							throw err
+						})
+					)
+				),
+			]
+		}
+	}
+
+	return Promise.all(
+		arr.map(([propertyName, input, repository]) =>
+			addProperty(propertyName, repository, input)
+		)
+	)
+}
+
+export const assignStaticOptional = (entity, input) => (key: string) => {
+	if (input[key] !== undefined) entity[key] = input[key]
+}
+
+export const assignStatics = <T>(entity: T, input, keys: (keyof T)[]) => {
+	const assign = assignStaticOptional(entity, input)
+
+	for (const key of keys) {
+		assign(key as string)
+	}
+}
+
+export const completeMergeEntity = async <BaseEntity>(
+	entityRepository: Repository<BaseEntity>,
+	id: string,
+	input: any,
+	statics: (keyof BaseEntity)[],
+	collections: Array<[string, EntityOrStrings<any>, Repository<any>]>,
+	saveOptions?: SaveOptions
+) => {
+	const entity = await entityRepository.findOneOrFail(id, {
+		relations: constructRelations(
+			input,
+			constructRelations(
+				input,
+				collections.map((z) => z[0])
+			)
+		),
+	})
+
+	assignStatics(entity, input, statics)
+
+	await mergeCollectionsWithEntity(collections, entity)
+
+	await entityRepository.save(entity, saveOptions)
+
+	return entity
+}
+
+export const completeUpdateEntity = async <BaseEntity>(
+	entityRepository: Repository<BaseEntity>,
+	id: string,
+	input: any,
+	statics: (keyof BaseEntity)[],
+	collections: Array<[string, EntityOrStrings<any>, Repository<any>]>,
+	saveOptions?: SaveOptions
+) => {
+	const entity = await entityRepository.findOneOrFail(id, {
+		relations: constructRelations(
+			input,
+			constructRelations(
+				input,
+				collections.map((z) => z[0])
+			)
+		),
+	})
+
+	assignStatics(entity, input, statics)
+
+	await assignCollectionsToEntity(collections, entity)
+
+	await entityRepository.save(entity, saveOptions)
+
+	return entity
+}
+
+export const constructRelations = (
+	obj: Record<string, any>,
+	keys: string[]
+) => {
+	const relations = []
+	for (const key of keys) if (obj[key] !== undefined) relations.push(key)
+	return relations
 }
