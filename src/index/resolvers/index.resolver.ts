@@ -3,6 +3,7 @@ import { BaseEntityResolver } from '../../shared/graphql'
 import { Index } from '../index'
 import { IndexService } from '../service/index.service'
 import { CreateIndexInput } from './inputs/CreateIndex.input'
+import { UpdateIndexInput } from './inputs/UpdateIndex.input'
 
 @Resolver()
 export class IndexResolver extends BaseEntityResolver(Index) {
@@ -13,5 +14,10 @@ export class IndexResolver extends BaseEntityResolver(Index) {
 	@Mutation(() => Index)
 	createIndex(@Args('input') input: CreateIndexInput) {
 		return this.indexService.create(input)
+	}
+
+	@Mutation(() => Index)
+	updateIndex(@Args('id') id: string, @Args('input') input: UpdateIndexInput) {
+		return this.indexService.updateIndex(id, input)
 	}
 }
