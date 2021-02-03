@@ -7,6 +7,7 @@ import { LegislationEvent } from '../../../events/legislation/legislation-event'
 export interface CreateNamedEntityInput {
 	title: string
 	description: string
+	type: string
 	indices?: EntityOrStrings<Index>
 	categories?: EntityOrStrings<Category>
 	policies?: EntityOrStrings<Policy>
